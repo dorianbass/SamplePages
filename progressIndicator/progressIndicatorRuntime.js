@@ -25,20 +25,47 @@
 			steps = [];
 			var picklistField = skuid.$M(xmlDef.attr('model')).getField(xmlDef.attr('field'));
 
-			$.each(picklistField.picklistEntries, function(i, entry){
-				steps.push({
-					label: entry.label,
-					dataId: '' + i
-				});
-			});
+            // Desynit December 2017
+            // Use snippet to retrieve picklist values if one is defined
+            if(picklistField.picklistSourceSnippet != null) {
+                var snipFunc = skuid.snippet.get(picklistField.picklistSourceSnippet);
+                var theValues = snipFunc()[0];
+
+                $.each(theValues, function(i, entry){
+    				steps.push({
+    					label: entry.label,
+    					dataId: '' + i
+    				});
+    			});
+
+            } else {
+
+                $.each(picklistField.picklistEntries, function(i, entry){
+                	steps.push({
+                		label: entry.label,
+                		dataId: '' + i
+                	});
+                });
+
+            }
+            // END of Desynit changes
+
+            // This is the pre-Desynit code...
+            // $.each(picklistField.picklistEntries, function(i, entry){
+            //     steps.push({
+            //         label: entry.label,
+            //         dataId: '' + i
+            //     });
+            // });
+
 		}
 
-		// Iterate through each of our step, and create a 
+		// Iterate through each of our step, and create a
 		// corresponding td element with the proper classes
 		// and content
 		for (var i = 0; i < steps.length; i++) {
 			var td = $('<td class="progress-chunk" data-id="' + steps[i].dataId + '">');
-			
+
 			var text = $('<div class="progress-text">');
 			if(steps[i].icon && steps[i].icon.value){
 				text.append($('<div>').addClass('nx-step-icon ' + steps[id].icon.value + ' sk-icon inline'));
@@ -101,7 +128,7 @@
 			}
 		};
 
-		// Set the step initial index 
+		// Set the step initial index
 		updateIndex(0);
 
 		// Bind this component to its firend component
@@ -109,12 +136,12 @@
 			// If it's already been set
 			if(friendComponent)
 				return;
-			
+
 			// The friend of this components is how this
 			// component will determine when to update itself
 
 			var friendComponent = $('#' + friendId);
-			
+
 			// Make sure the friend component exists
 			if(friendComponent){
 
@@ -151,7 +178,7 @@
 
 
 		if(mode == 'tabwiz'){
-			// This first call will call whenever the Progress Indicator is actually 
+			// This first call will call whenever the Progress Indicator is actually
 			// rendered
 			bindFriend();
 			// This second one will be called when the page is done loading
@@ -161,7 +188,23 @@
 			if(skuid.$M(xmlDef.attr('model')).getRows()){
 				var setPicklist = function(){
 					var row = skuid.$M(xmlDef.attr('model')).getRows()[0];
-					var entries = skuid.$M(xmlDef.attr('model')).getField(xmlDef.attr('field')).picklistEntries;
+
+                    // Desynit December 2017
+                    // Use snippet instead of API to retrieve picklist values if one is specified
+                    var snippetName = skuid.$M(xmlDef.attr('model')).getField(xmlDef.attr('field')).picklistSourceSnippet;
+                    var entries = [];
+
+                    if(snippetName) {
+                        var snipFunc = skuid.snippet.get(picklistField.picklistSourceSnippet);
+                        entries = snipFunc()[0];
+                    } else {
+                        entries = skuid.$M(xmlDef.attr('model')).getField(xmlDef.attr('field')).picklistEntries;
+                    }
+                    // END of Desynit changes
+
+                    // This is the pre-Desynit code...
+                    // var entries = skuid.$M(xmlDef.attr('model')).getField(xmlDef.attr('field')).picklistEntries;
+
 					updateIndex(entries.indexOf(row[xmlDef.attr('field')]));
 					$.each(entries, function(i, entry){
 						if(entry.label == row[xmlDef.attr('field')]){
